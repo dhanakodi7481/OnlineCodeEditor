@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevKod.io | Pro Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-sidebar: #13181f;
+    --border: #30363d;
+    --border-light: #21262d;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --text-muted: #484f58;
+    --accent: #2f81f7;
+    --accent-hover: #388bfd;
+    --accent-dim: rgba(47,129,247,0.12);
+    --green: #3fb950;
+    --green-dim: rgba(63,185,80,0.1);
+    --red: #f85149;
+    --yellow: #d29922;
+    --run-bg: #238636;
+    --run-hover: #2ea043;
+    --tab-active: #1c2128;
+  }
+
+  .light {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #eaeef2;
+    --bg-sidebar: #f0f3f6;
+    --border: #d0d7de;
+    --border-light: #e5e8eb;
+    --text-primary: #1f2328;
+    --text-secondary: #656d76;
+    --text-muted: #9198a1;
+    --accent: #0969da;
+    --accent-hover: #0550ae;
+    --accent-dim: rgba(9,105,218,0.08);
+    --green: #1a7f37;
+    --green-dim: rgba(26,127,55,0.1);
+    --red: #cf222e;
+    --tab-active: #ffffff;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'Sora', sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  /* ── NAVBAR ── */
+  .navbar {
+    display: flex;
+    align-items: center;
+    height: 52px;
+    padding: 0 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    gap: 12px;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
+    margin-right: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-icon svg { width: 14px; height: 14px; fill: white; }
+  .logo span { color: var(--accent); }
+
+  .navbar-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    flex-shrink: 0;
+  }
+
+  /* File tabs */
+  .tabs {
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+    flex: 1;
+    overflow: hidden;
+  }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+    white-space: nowrap;
+    transition: color 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .tab:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .tab.active {
+    background: var(--tab-active);
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent);
+  }
+  .tab-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tab-dot.py { background: #3572A5; }
+  .tab-dot.js { background: #f1e05a; }
+  .tab-dot.java { background: #b07219; }
+  .tab-dot.html { background: #e34c26; }
+
+  /* Navbar right controls */
+  .nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .lang-select {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 10px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .lang-select:hover { border-color: var(--accent); }
+
+  /* Theme toggle */
+  .theme-toggle {
+    width: 36px; height: 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.25s;
+    flex-shrink: 0;
+  }
+  .theme-toggle.light-mode { background: var(--accent-dim); border-color: var(--accent); }
+  .toggle-thumb {
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    transition: transform 0.25s, background 0.25s;
+  }
+  .theme-toggle.light-mode .toggle-thumb {
+    transform: translateX(16px);
+    background: var(--accent);
+  }
+  .toggle-icon {
+    position: absolute;
+    font-size: 9px;
+    top: 50%; transform: translateY(-50%);
+  }
+  .toggle-icon.moon { left: 4px; }
+  .toggle-icon.sun { right: 4px; }
+
+  /* Run button */
+  .run-btn {
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    background: var(--run-bg);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, transform 0.1s;
+    letter-spacing: 0.2px;
+  }
+  .run-btn:hover { background: var(--run-hover); }
+  .run-btn:active { transform: scale(0.97); }
+  .run-btn svg { width: 14px; height: 14px; }
+  .run-btn.running { background: #6e7681; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 48px;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 0;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+  .sidebar-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.15s;
+    position: relative;
+    border: none;
+    background: none;
+  }
+  .sidebar-btn:hover { background: var(--bg-tertiary); color: var(--text-secondary); }
+  .sidebar-btn.active { background: var(--accent-dim); color: var(--accent); }
+  .sidebar-btn svg { width: 18px; height: 18px; }
+  .lang-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .workspace {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── EDITOR PANE ── */
+  .editor-pane {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    border-right: 1px solid var(--border);
+  }
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 36px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+  .editor-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .toolbar-label {
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .toolbar-btn {
+    font-size: 11px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: none;
+    border: none;
+    font-family: 'Sora', sans-serif;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .toolbar-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+  .toolbar-btn svg { width: 12px; height: 12px; }
+
+  #editor-mount { flex: 1; }
+
+  /* ── OUTPUT PANE ── */
+  .output-pane {
+    width: 45%;
+    min-width: 300px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    flex-shrink: 0;
+  }
+  .output-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    height: 36px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+  }
+  .output-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .output-status {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: background 0.3s;
+  }
+  .output-status.running { background: var(--yellow); animation: pulse 1s infinite; }
+  .output-status.success { background: var(--green); }
+  .output-status.error { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .output-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .output-action-btn {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Sora', sans-serif;
+    transition: all 0.15s;
+  }
+  .output-action-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+  .output-body {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+  }
+  .output-body::-webkit-scrollbar { width: 6px; }
+  .output-body::-webkit-scrollbar-track { background: transparent; }
+  .output-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  #text-output {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    padding: 20px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text-primary);
+    min-height: 100%;
+  }
+
+  #text-output.has-error { color: var(--red); }
+  #text-output.idle { color: var(--text-muted); }
+
+  #iframe-output {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
+    background: white;
+  }
+
+  /* ── STATUS BAR ── */
+  .statusbar {
+    height: 22px;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .status-item {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.85);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    letter-spacing: 0.3px;
+  }
+  .status-item svg { width: 10px; height: 10px; opacity: 0.7; }
+  .statusbar-right { margin-left: auto; display: flex; gap: 16px; }
+
+  /* ── SPLITTER ── */
+  .splitter {
+    width: 4px;
+    background: var(--border);
+    cursor: col-resize;
+    flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .splitter:hover, .splitter.dragging { background: var(--accent); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+  .empty-state-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.2;
+  }
+  .empty-state-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.6;
+  }
+
+  #startLoading{
+  position: fixed;
+  top: 52px;
+  left: 0;
+  height: 3px;
+  width: 0%;
+  opacity: 0;
+  z-index: 9999;
+  transition: width 0.3s ease-out, opacity 0.3s ease-out;
+  background: linear-gradient(90deg,#047bd5,#388bfd);
+  box-shadow: 0 0 8px rgba(4,123,213,0.6);
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 16 16"><path d="M4 6l-3 2 3 2M12 6l3 2-3 2M9 3l-2 10"/></svg>
+    </div>
+    Dev<span>Kod</span>.io
+  </div>
+  <div class="navbar-divider"></div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-indicator" data-lang="python">
+      <span class="tab-dot py" id="tab-dot"></span>
+      <span id="tab-filename">main.py</span>
+    </div>
+  </div>
+
+  <div class="nav-controls">
+    <select class="lang-select" id="lang-select">
+      <option value="python">Python</option>
+      <option value="javascript">JavaScript</option>
+      <option value="java">Java</option>
+      <option value="html">HTML</option>
+    </select>
+
+    <div class="theme-toggle" id="theme-toggle" title="Toggle theme">
+      <span class="toggle-icon moon">🌙</span>
+      <span class="toggle-icon sun">☀️</span>
+      <div class="toggle-thumb"></div>
+    </div>
+
+    <button class="run-btn" id="run-btn">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg>
+      Run
+    </button>
+  </div>
+</nav>
+<div id="startLoading"></div>
+
+<!-- WORKSPACE -->
+<div class="workspace">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <button class="sidebar-btn active" title="Python" onclick="setLang('python')">
+      <span class="lang-badge" style="color:#3572A5">PY</span>
+    </button>
+    <button class="sidebar-btn" title="JavaScript" onclick="setLang('javascript')">
+      <span class="lang-badge" style="color:#f1e05a">JS</span>
+    </button>
+    <button class="sidebar-btn" title="TypeScript" onclick="setLang('typescript')">
+      <span class="lang-badge" style="color:#2b7489">TS</span>
+    </button>
+    <button class="sidebar-btn" title="Java" onclick="setLang('java')">
+      <span class="lang-badge" style="color:#b07219">JV</span>
+    </button>
+    <button class="sidebar-btn" title="HTML" onclick="setLang('html')">
+      <span class="lang-badge" style="color:#e34c26">HT</span>
+    </button>
+    <div style="flex:1"></div>
+    <!-- Settings icon -->
+    <button class="sidebar-btn" title="Settings">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 0l.5 2.5c.4.1.8.3 1.1.5l2.3-1 1.6 1.6-1 2.3c.2.3.4.7.5 1.1L15.5 7.5v2.3l-2.5.5c-.1.4-.3.8-.5 1.1l1 2.3-1.6 1.6-2.3-1c-.3.2-.7.4-1.1.5L8 17H6l-.5-2.5c-.4-.1-.8-.3-1.1-.5l-2.3 1-1.6-1.6 1-2.3c-.2-.3-.4-.7-.5-1.1L.5 9.8V7.5l2.5-.5c.1-.4.3-.8.5-1.1l-1-2.3L4.1 2l2.3 1c.3-.2.7-.4 1.1-.5L8 0z"/></svg>
+    </button>
+  </div>
+
+  <!-- EDITOR PANE -->
+  <div class="editor-pane" id="editor-pane">
+    <div class="editor-toolbar">
+      <div class="editor-toolbar-left">
+        <span class="toolbar-label">Editor</span>
+        <button class="toolbar-btn" id="copy-btn" onclick="copyCode()">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25z"/></svg>
+          Copy
+        </button>
+        <button class="toolbar-btn" onclick="clearEditor()">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M11 1.75V3h2.25a.75.75 0 010 1.5H2.75a.75.75 0 010-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75zM4.496 6.675l.66 6.6a.25.25 0 00.249.225h5.19a.25.25 0 00.249-.225l.66-6.6a.75.75 0 011.492.149l-.66 6.6A1.748 1.748 0 0110.595 15h-5.19a1.75 1.75 0 01-1.741-1.575l-.66-6.6a.75.75 0 111.492-.15z"/></svg>
+          Clear
+        </button>
+      </div>
+      <span class="toolbar-label" id="cursor-pos" style="font-size:10px">Ln 1, Col 1</span>
+    </div>
+    <div id="editor-mount"></div>
+  </div>
+
+  <!-- SPLITTER -->
+  <div class="splitter" id="splitter"></div>
+
+  <!-- OUTPUT PANE -->
+  <div class="output-pane" id="output-pane">
+    <div class="output-header">
+      <div class="output-title">
+        <div class="output-status" id="output-status"></div>
+        Output
+      </div>
+      <div class="output-actions">
+        <button class="output-action-btn" onclick="clearOutput()">Clear</button>
+        <button class="output-action-btn" onclick="copyOutput()">Copy</button>
+      </div>
+    </div>
+    <div class="output-body" id="output-body">
+      <pre id="text-output" class="idle">// Click Run to execute your code...</pre>
+      <iframe id="iframe-output" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="status-item">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+    DevKod.io
+  </div>
+  <div class="status-item" id="status-lang">
+    <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="7.5" fill="none" stroke="currentColor"/><path d="M5.5 5.5L8 8l-2.5 2.5M9 10.5h2"/></svg>
+    Python
+  </div>
+  <div class="statusbar-right">
+    <div class="status-item" id="status-msg">Ready</div>
+    <div class="status-item">UTF-8</div>
+  </div>
+</div>
+
+<script>
+require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs' } });
+
+let editor;
+let isDark = true;
+let currentLang = 'python';
+
+const langMeta = {
+  python:     { ext: 'py',  dotClass: 'py',   label: 'Python',     starter: '# Welcome to DevKod.io 🚀\nprint("Hello, World!")\n' },
+  javascript: { ext: 'js',  dotClass: 'js',   label: 'JavaScript', starter: '// Welcome to DevKod.io 🚀\nconsole.log("Hello, World!");\n' },
+  typescript: { ext: 'ts',  dotClass: 'js',   label: 'TypeScript', starter: '// Welcome to DevKod.io 🚀\nconst greet = (name: string): string => `Hello, ${name}!`;\nconsole.log(greet("World"));\n' },
+  java:       { ext: 'java',dotClass: 'java', label: 'Java',       starter: 'public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, World!");\n    }\n}\n' },
+  html:       { ext: 'html',dotClass: 'html', label: 'HTML',       starter: '<!DOCTYPE html>\n<html>\n<head><title>Preview</title></head>\n<body>\n  <h1>Hello, World! 🚀</h1>\n  <p>Edit this HTML and click Run.</p>\n</body>\n</html>\n' },
+};
+
+// ── Init Monaco ──
+require(['vs/editor/editor.main'], function () {
+  monaco.editor.defineTheme('devedit-dark', {
+    base: 'vs-dark',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': '#0d1117',
+      'editor.lineHighlightBackground': '#161b22',
+      'editorLineNumber.foreground': '#484f58',
+      'editorLineNumber.activeForeground': '#8b949e',
+      'editor.selectionBackground': '#264f78',
+    }
+  });
+  monaco.editor.defineTheme('devedit-light', {
+    base: 'vs',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': '#ffffff',
+      'editor.lineHighlightBackground': '#f6f8fa',
+      'editorLineNumber.foreground': '#9198a1',
+    }
+  });
+
+  editor = monaco.editor.create(document.getElementById('editor-mount'), {
+    value: langMeta.python.starter,
+    language: 'python',
+    theme: 'devedit-dark',
+    automaticLayout: true,
+    fontSize: 14,
+    fontFamily: "'JetBrains Mono', monospace",
+    fontLigatures: true,
+    padding: { top: 16, bottom: 16 },
+    lineNumbersMinChars: 3,
+    minimap: { enabled: false },
+    scrollBeyondLastLine: false,
+    renderLineHighlight: 'line',
+    cursorBlinking: 'smooth',
+    smoothScrolling: true,
+    contextmenu: true,
+    wordWrap: 'on',
+  });
+
+  editor.onDidChangeCursorPosition(e => {
+    document.getElementById('cursor-pos').textContent =
+      `Ln ${e.position.lineNumber}, Col ${e.position.column}`;
+  });
+});
+
+// ── Set Language ──
+function setLang(lang) {
+  currentLang = lang;
+  const meta = langMeta[lang] || langMeta.python;
+
+  // Update select
+  document.getElementById('lang-select').value = lang in langMeta ? lang : 'python';
+
+  // Update tab
+  document.getElementById('tab-filename').textContent = `main.${meta.ext}`;
+  const dot = document.getElementById('tab-dot');
+  dot.className = `tab-dot ${meta.dotClass}`;
+
+  // Update sidebar active
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  const map = { python:0, javascript:1, typescript:2, java:3, html:4 };
+  const idx = map[lang];
+  if (idx !== undefined) document.querySelectorAll('.sidebar-btn')[idx]?.classList.add('active');
+
+  // Update statusbar
+  document.getElementById('status-lang').childNodes[1].textContent = ` ${meta.label}`;
+
+  // Update editor language + content
+  if (editor) {
+    const model = editor.getModel();
+    if (model) {
+      monaco.editor.setModelLanguage(model, lang === 'typescript' ? 'typescript' : lang);
+      editor.setValue(meta.starter);
+    }
+  }
+
+  // Reset output
+  showTextOutput();
+  setOutputStatus('idle');
+}
+
+document.getElementById('lang-select').onchange = e => setLang(e.target.value);
+
+// ── Theme Toggle ──
+document.getElementById('theme-toggle').onclick = function () {
+  isDark = !isDark;
+  document.body.classList.toggle('light', !isDark);
+  this.classList.toggle('light-mode', !isDark);
+  if (editor) monaco.editor.setTheme(isDark ? 'devedit-dark' : 'devedit-light');
+};
+
+// ── Output helpers ──
+function showTextOutput() {
+  document.getElementById('text-output').style.display = 'block';
+  const iframe = document.getElementById('iframe-output');
+  iframe.style.display = 'none';
+  iframe.src = 'about:blank';
+}
+
+function setOutputStatus(state) {
+  const s = document.getElementById('output-status');
+  s.className = 'output-status' + (state !== 'idle' ? ` ${state}` : '');
+}
+
+function setStatusMsg(msg) {
+  document.getElementById('status-msg').textContent = msg;
+}
+const loader = document.getElementById('startLoading');
+let sastikInterval;
+
+function startLoading() {
+
+    loader.style.opacity = '1';
+    loader.style.width = '20%';
+
+    sastikInterval = setInterval(() => {
+
+        let currentWidth = parseFloat(loader.style.width) || 20;
+
+        if (currentWidth < 90) {
+            loader.style.width =
+                Math.min(currentWidth + Math.random()*3, 90) + '%';
+        }
+
+    }, 300);
+}
+
+function stopLoading() {
+    clearInterval(sastikInterval);
+    loader.style.width = '100%';
+    
+    setTimeout(() => {
+        loader.style.opacity = '0';
+        setTimeout(() => { loader.style.width = '0%'; }, 300);
+    }, 200);
+}
+
+// --- Trigger on Page Refresh ---
+window.addEventListener('load', () => {
+    startLoading();
+    // Simulate short delay for the "refresh" feel
+    setTimeout(stopLoading, 800);
+});
+
+
+
+// ── Run ──
+document.getElementById('run-btn').onclick = async function () {
+
+  if (!editor) return;
+
+  
+  const lang = currentLang;
+const code = editor.getValue();
+if (!code.trim()) {
+    return;
+}
+
+
+     // START LOADING EFFECT
+    startLoading();
+
+
+  const runBtn = this;
+  runBtn.classList.add('running');
+  runBtn.disabled = true;
+  runBtn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor" style="animation:spin 1s linear infinite"><path d="M8 3a5 5 0 100 10A5 5 0 008 3zM1 8a7 7 0 1114 0A7 7 0 011 8z" opacity=".3"/><path d="M8 1a7 7 0 017 7h-2a5 5 0 00-5-5V1z"/></svg> Running...`;
+
+  setOutputStatus('running');
+  setStatusMsg('Running...');
+
+  // ── HTML preview ──
+  if (lang === 'html') {
+    document.getElementById('text-output').style.display = 'none';
+    const iframe = document.getElementById('iframe-output');
+    iframe.style.display = 'block';
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open(); doc.write(code); doc.close();
+stopLoading(); // STOP HERE
+    doneRunning(runBtn);
+    setOutputStatus('success');
+    setStatusMsg('Preview rendered');
+    return;
+  }
+
+  showTextOutput();
+  const out = document.getElementById('text-output');
+  out.className = '';
+  out.textContent = '';
+
+  // ── JavaScript ──
+  if (lang === 'javascript' || lang === 'typescript') {
+    const scratch = document.createElement('iframe');
+    scratch.style.display = 'none';
+    document.body.appendChild(scratch);
+    const win = scratch.contentWindow;
+    let logs = [];
+
+    win.console = {
+      log: (...a) => { logs.push(a.map(String).join(' ')); },
+      error: (...a) => { logs.push('[error] ' + a.map(String).join(' ')); },
+      warn: (...a)  => { logs.push('[warn] '  + a.map(String).join(' ')); },
+      info: (...a)  => { logs.push(a.map(String).join(' ')); },
+    };
+
+    let hasError = false;
+    try {
+      // For TypeScript, strip type annotations simply (basic TS→JS)
+      let runCode = code;
+      if (lang === 'typescript') {
+        runCode = code.replace(/:\s*\w+(\[\])?(\s*\|?\s*\w+)*/g, '').replace(/^(interface|type)\s+.+/gm, '');
+      }
+      win.eval(runCode);
+    } catch(e) {
+      hasError = true;
+      out.className = 'has-error';
+      out.textContent = `⚠ ${e.name}: ${e.message}`;
+      setOutputStatus('error');
+      setStatusMsg('Error');
+    }
+
+    if (!hasError) {
+      out.textContent = logs.length ? logs.join('\n') : '(no output)';
+      setOutputStatus('success');
+      setStatusMsg('Done');
+    }
+
+    document.body.removeChild(scratch);
+    stopLoading(); // STOP HERE
+    doneRunning(runBtn);
+    return;
+  }
+
+  // ── Python / Java → Backend ──
+  out.textContent = '⏳ Connecting to server...';
+  try {
+    const res = await fetch('/run-code/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+      body: JSON.stringify({ code, language: lang })
+    });
+    const data = await res.json();
+    out.textContent = data.output || '(no output)';
+    setOutputStatus('success');
+    setStatusMsg('Done');
+  } catch(e) {
+    out.className = 'has-error';
+    out.textContent = '⚠ Server Error: Could not connect to backend.\n\nMake sure your Django server is running.';
+    setOutputStatus('error');
+    setStatusMsg('Server error');
+  }
+stopLoading(); // STOP HERE
+  doneRunning(runBtn);
+};
+
+function doneRunning(btn) {
+  btn.classList.remove('running');
+  btn.disabled = false;
+  btn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg> Run`;
+}
+
+// ── Toolbar actions ──
+function copyCode() {
+  if (!editor) return;
+  navigator.clipboard.writeText(editor.getValue()).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25z"/></svg> Copy`; }, 1500);
+  });
+}
+
+function clearEditor() {
+  if (editor) editor.setValue('');
+}
+
+function clearOutput() {
+  showTextOutput();
+  const out = document.getElementById('text-output');
+  out.className = 'idle';
+  out.textContent = '// Click Run to execute your code...';
+  setOutputStatus('idle');
+  setStatusMsg('Ready');
+}
+
+function copyOutput() {
+  const out = document.getElementById('text-output');
+  navigator.clipboard.writeText(out.textContent);
+}
+
+// ── Splitter drag ──
+const splitter = document.getElementById('splitter');
+const outputPane = document.getElementById('output-pane');
+const workspace = document.querySelector('.workspace');
+let dragging = false;
+
+splitter.addEventListener('mousedown', e => {
+  dragging = true;
+  splitter.classList.add('dragging');
+  e.preventDefault();
+});
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const rect = workspace.getBoundingClientRect();
+  const total = rect.width;
+  const rightWidth = rect.right - e.clientX - 2;
+  const pct = Math.min(Math.max(rightWidth / total * 100, 20), 65);
+  outputPane.style.width = pct + '%';
+});
+document.addEventListener('mouseup', () => {
+  dragging = false;
+  splitter.classList.remove('dragging');
+});
+
+
+
+// ── Spin animation ──
+const style = document.createElement('style');
+style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+document.head.appendChild(style);
+
+// ── Message listener (JS iframe) ──
+window.onmessage = function(e) {
+  const out = document.getElementById('text-output');
+  if (!out) return;
+  if (e.data.type === 'error') {
+    out.className = 'has-error';
+    out.textContent = e.data.msg;
+  } else if (e.data.type === 'log') {
+    out.className = '';
+    out.textContent += e.data.msg + '\n';
+  }
+};
+
+
+</script>
+</body>
+</html>
