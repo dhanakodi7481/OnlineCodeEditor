@@ -6,6 +6,7 @@
 <title>DevKod.io | Pro Editor</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.36.1/min/vs/loader.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/5.0.4/typescript.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -801,49 +802,57 @@ stopLoading(); // STOP HERE
   out.className = '';
   out.textContent = '';
 
-  // ── JavaScript ──
-  if (lang === 'javascript' || lang === 'typescript') {
+ // ── JavaScript / TypeScript ──
+if (lang === 'javascript' || lang === 'typescript') {
     const scratch = document.createElement('iframe');
     scratch.style.display = 'none';
     document.body.appendChild(scratch);
     const win = scratch.contentWindow;
     let logs = [];
 
+    // Capture console output from the iframe
     win.console = {
-      log: (...a) => { logs.push(a.map(String).join(' ')); },
-      error: (...a) => { logs.push('[error] ' + a.map(String).join(' ')); },
-      warn: (...a)  => { logs.push('[warn] '  + a.map(String).join(' ')); },
-      info: (...a)  => { logs.push(a.map(String).join(' ')); },
+        log: (...a) => { logs.push(a.map(String).join(' ')); },
+        error: (...a) => { logs.push('[error] ' + a.map(String).join(' ')); },
+        warn: (...a) => { logs.push('[warn] ' + a.map(String).join(' ')); },
+        info: (...a) => { logs.push(a.map(String).join(' ')); },
     };
 
     let hasError = false;
     try {
-      // For TypeScript, strip type annotations simply (basic TS→JS)
-      let runCode = code;
-      if (lang === 'typescript') {
-        runCode = code.replace(/:\s*\w+(\[\])?(\s*\|?\s*\w+)*/g, '').replace(/^(interface|type)\s+.+/gm, '');
-      }
-      win.eval(runCode);
-    } catch(e) {
-      hasError = true;
-      out.className = 'has-error';
-      out.textContent = `⚠ ${e.name}: ${e.message}`;
-      setOutputStatus('error');
-      setStatusMsg('Error');
+        let runCode = code;
+
+        if (lang === 'typescript') {
+            // Use the official TS compiler to safely remove types and interfaces
+            runCode = ts.transpileModule(code, {
+                compilerOptions: { 
+                    module: ts.ModuleKind.None, 
+                    target: ts.ScriptTarget.ESNext 
+                }
+            }).outputText;
+        }
+
+        win.eval(runCode);
+    } catch (e) {
+        hasError = true;
+        out.className = 'has-error';
+        // Improved error reporting
+        out.textContent = `⚠ ${e.name}: ${e.message}`;
+        setOutputStatus('error');
+        setStatusMsg('Error');
     }
 
     if (!hasError) {
-      out.textContent = logs.length ? logs.join('\n') : '(no output)';
-      setOutputStatus('success');
-      setStatusMsg('Done');
+        out.textContent = logs.length ? logs.join('\n') : '(no output)';
+        setOutputStatus('success');
+        setStatusMsg('Done');
     }
 
     document.body.removeChild(scratch);
-    stopLoading(); // STOP HERE
+    stopLoading(); 
     doneRunning(runBtn);
     return;
-  }
-
+}
   // ── Python / Java → Backend ──
   out.textContent = '⏳ Connecting to server...';
   try {
