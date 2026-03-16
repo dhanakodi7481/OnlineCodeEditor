@@ -166,37 +166,27 @@
   }
   .lang-select:hover { border-color: var(--accent); }
 
-  /* Theme toggle */
-  .theme-toggle {
-    width: 36px; height: 20px;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    cursor: pointer;
-    position: relative;
-    transition: background 0.25s;
-    flex-shrink: 0;
-  }
-  .theme-toggle.light-mode { background: var(--accent-dim); border-color: var(--accent); }
-  .toggle-thumb {
-    position: absolute;
-    top: 2px; left: 2px;
-    width: 14px; height: 14px;
-    border-radius: 50%;
-    background: var(--text-secondary);
-    transition: transform 0.25s, background 0.25s;
-  }
-  .theme-toggle.light-mode .toggle-thumb {
-    transform: translateX(16px);
-    background: var(--accent);
-  }
-  .toggle-icon {
-    position: absolute;
-    font-size: 9px;
-    top: 50%; transform: translateY(-50%);
-  }
-  .toggle-icon.moon { left: 4px; }
-  .toggle-icon.sun { right: 4px; }
+/* DEFAULT STATE (DARK MODE) */
+/* Hide the sun, show the moon */
+#theme-toggle .sun-icon {
+  display: none;
+}
+
+#theme-toggle .moon-icon {
+  display: block;
+  color: #8a8fb5; /* Match your moon screenshot color */
+}
+
+/* LIGHT MODE STATE */
+/* When the 'light-mode' class is present: hide moon, show sun */
+#theme-toggle.light-mode .moon-icon {
+  display: none;
+}
+
+#theme-toggle.light-mode .sun-icon {
+  display: block;
+  color: orangered; /* Or a golden color if preferred */
+}
 
   /* Run button */
   .run-btn {
@@ -464,9 +454,193 @@
   background: linear-gradient(90deg,#047bd5,#388bfd);
   box-shadow: 0 0 8px rgba(4,123,213,0.6);
 }
+
+/* ── MOBILE DESIGN (PROGRAMIZ STYLE) ── */
+@media (max-width: 768px) {
+  body { overflow: hidden; }
+  
+  .sidebar, .tabs, .navbar-divider, .statusbar { display: none !important; }
+
+  /* Navbar Adjustments */
+  .navbar { height: 48px; padding: 0 12px; }
+  .logo { font-size: 14px; }
+  .nav-controls { gap: 6px; }
+  .lang-select { padding: 4px 6px; font-size: 11px; }
+
+  /* Tabbed Workspace */
+  .workspace { flex-direction: column; }
+
+  .mobile-nav {
+    display: flex;
+    background: var(--bg-secondary);
+    padding: 8px 12px 0;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mobile-tab {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    border-radius: 6px 6px 0 0;
+    cursor: pointer;
+  }
+
+  .mobile-tab.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  #editor-pane, #output-pane {
+   /* display: none;  <-- Remove or comment this out */
+  position: absolute;
+  visibility: hidden;
+  height: 0;
+  width: 100% !important;
+  overflow: hidden;
+  }
+
+  #editor-pane.active-view, 
+  #output-pane.active-view {
+    position: relative;
+  visibility: visible;
+  height: 100%; /* Or your desired height */
+  }
+  
+  .workspace {
+    flex-direction: column;
+  }
+  
+  #splitter {
+    display: none; /* Hide the drag splitter on mobile */
+  }
+
+  /* Hide the text "Run" */
+  .run-text {
+    display: none;
+  }
+
+  /* Shrink button to fit icon only */
+  .run-btn {
+    padding: 8px !important;
+    min-width: 36px;
+    height: 36px;
+    justify-content: center;
+    /* Reset floating position if you previously set it */
+    position: static !important; 
+    box-shadow: none !important;
+  }
+
+  /* Adjust nav spacing */
+  .nav-controls {
+    gap: 8px;
+  }
+
+
+  /* Floating Run Button */
+  .run-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    border-radius: 4px;
+    padding: 12px 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 1000;
+  }
+}
+
+/* Desktop Defaults */
+@media (min-width: 769px) {
+  .mobile-nav { display: none; }
+  .editor-pane, .output-pane { display: flex !important; }
+}
+
+.custom-select-wrapper {
+  position: relative;
+  width: 130px;
+  user-select: none;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+}
+
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: #1e1e2e; /* Dark theme default */
+  border: 1px solid #333;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Light mode overrides */
+body.light .select-trigger {
+  background: #ffffff;
+  border-color: #ddd;
+  color: #333;
+}
+
+.select-options {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  right: 0;
+  background: #1e1e2e;
+  border: 1px solid #333;
+  border-radius: 6px;
+  display: none; /* Hidden by default */
+  z-index: 100;
+  overflow: hidden;
+}
+
+body.light .select-options {
+  background: #fff;
+  border-color: #ddd;
+}
+
+.custom-select-wrapper.open .select-options {
+  display: block;
+}
+
+.option {
+  padding: 8px 12px;
+  color: #aaa;
+  cursor: pointer;
+}
+
+.option:hover {
+  background: #2d2d44;
+  color: #fff;
+}
+
+body.light .option:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+.option.selected {
+  color: #007acc; /* Highlight color */
+  font-weight: bold;
+}
+
+.arrow {
+  transition: transform 0.2s ease;
+}
+
+.custom-select-wrapper.open .arrow {
+  transform: rotate(180deg);
+}
 </style>
 </head>
 <body>
+<div class="mobile-nav">
+  <div class="mobile-tab active" id="m-tab-code" onclick="switchMobileTab('code')">Main.js</div>
+  <div class="mobile-tab" id="m-tab-output" onclick="switchMobileTab('output')">Output</div>
+</div>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -485,24 +659,48 @@
     </div>
   </div>
 
-  <div class="nav-controls">
-    <select class="lang-select" id="lang-select">
-      <option value="python">Python</option>
-      <option value="javascript">JavaScript</option>
-      <option value="java">Java</option>
-      <option value="html">HTML</option>
-    </select>
-
-    <div class="theme-toggle" id="theme-toggle" title="Toggle theme">
-      <span class="toggle-icon moon">🌙</span>
-      <span class="toggle-icon sun">☀️</span>
-      <div class="toggle-thumb"></div>
+ <div class="nav-controls">
+  <div class="custom-select-wrapper" id="custom-lang-dropdown">
+    <div class="select-trigger">
+      <span id="selected-lang-text">Python</span>
+      <svg class="arrow" width="10" height="10" viewBox="0 0 10 10">
+        <path d="M1 3.5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
+      </svg>
     </div>
+    <div class="select-options">
+      <div class="option selected" data-value="python">Python</div>
+      <div class="option" data-value="javascript">JavaScript</div>
+      <div class="option" data-value="java">Java</div>
+      <div class="option" data-value="html">HTML</div>
+    </div>
+  </div>
 
-    <button class="run-btn" id="run-btn">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg>
-      Run
-    </button>
+  <select id="lang-select" style="display: none;">
+    <option value="python">Python</option>
+    <option value="javascript">JavaScript</option>
+    <option value="java">Java</option>
+    <option value="html">HTML</option>
+  </select>
+</div>
+
+  <div class="theme-toggle" id="theme-toggle" title="Toggle theme">
+  <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="5"></circle>
+    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+  </svg>
+
+  <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+  </svg>
+</div>
+
+
+  <button class="run-btn" id="run-btn" onclick="handleRun()">
+  <svg viewBox="0 0 16 16" fill="currentColor">
+    <path d="M3 2.5l10 5.5-10 5.5V2.5z"/>
+  </svg>
+  <span class="run-text">Run</span>
+</button>
   </div>
 </nav>
 <div id="startLoading"></div>
@@ -535,7 +733,7 @@
   </div>
 
   <!-- EDITOR PANE -->
-  <div class="editor-pane" id="editor-pane">
+  <div class="editor-pane active-view" id="editor-pane">
     <div class="editor-toolbar">
       <div class="editor-toolbar-left">
         <span class="toolbar-label">Editor</span>
@@ -760,25 +958,24 @@ window.addEventListener('load', () => {
 
 // ── Run ──
 document.getElementById('run-btn').onclick = async function () {
-
   if (!editor) return;
 
-  
   const lang = currentLang;
-const code = editor.getValue();
-if (!code.trim()) {
-    return;
-}
+  const code = editor.getValue();
+  if (!code.trim()) return;
 
+  // 1. MOBILE AUTO-SWITCH: Jump to output tab immediately
+  if (window.innerWidth <= 768) {
+    switchMobileTab('output');
+  }
 
-     // START LOADING EFFECT
-    startLoading();
-
+  // 2. START LOADING EFFECT
+  startLoading();
 
   const runBtn = this;
   runBtn.classList.add('running');
   runBtn.disabled = true;
-  runBtn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor" style="animation:spin 1s linear infinite"><path d="M8 3a5 5 0 100 10A5 5 0 008 3zM1 8a7 7 0 1114 0A7 7 0 011 8z" opacity=".3"/><path d="M8 1a7 7 0 017 7h-2a5 5 0 00-5-5V1z"/></svg> Running...`;
+  runBtn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor" style="animation:spin 1s linear infinite"><path d="M8 3a5 5 0 100 10A5 5 0 008 3zM1 8a7 7 0 1114 0A7 7 0 011 8z" opacity=".3"/><path d="M8 1a7 7 0 017 7h-2a5 5 0 00-5-5V1z"/></svg> <span class="run-text">Running...</span>`;
 
   setOutputStatus('running');
   setStatusMsg('Running...');
@@ -790,7 +987,7 @@ if (!code.trim()) {
     iframe.style.display = 'block';
     const doc = iframe.contentDocument || iframe.contentWindow.document;
     doc.open(); doc.write(code); doc.close();
-stopLoading(); // STOP HERE
+    stopLoading(); 
     doneRunning(runBtn);
     setOutputStatus('success');
     setStatusMsg('Preview rendered');
@@ -802,57 +999,50 @@ stopLoading(); // STOP HERE
   out.className = '';
   out.textContent = '';
 
- // ── JavaScript / TypeScript ──
-if (lang === 'javascript' || lang === 'typescript') {
+  // ── JavaScript / TypeScript ──
+  if (lang === 'javascript' || lang === 'typescript') {
     const scratch = document.createElement('iframe');
     scratch.style.display = 'none';
     document.body.appendChild(scratch);
     const win = scratch.contentWindow;
     let logs = [];
 
-    // Capture console output from the iframe
     win.console = {
-        log: (...a) => { logs.push(a.map(String).join(' ')); },
-        error: (...a) => { logs.push('[error] ' + a.map(String).join(' ')); },
-        warn: (...a) => { logs.push('[warn] ' + a.map(String).join(' ')); },
-        info: (...a) => { logs.push(a.map(String).join(' ')); },
+      log: (...a) => { logs.push(a.map(String).join(' ')); },
+      error: (...a) => { logs.push('[error] ' + a.map(String).join(' ')); },
+      warn: (...a) => { logs.push('[warn] ' + a.map(String).join(' ')); },
+      info: (...a) => { logs.push(a.map(String).join(' ')); },
     };
 
     let hasError = false;
     try {
-        let runCode = code;
-
-        if (lang === 'typescript') {
-            // Use the official TS compiler to safely remove types and interfaces
-            runCode = ts.transpileModule(code, {
-                compilerOptions: { 
-                    module: ts.ModuleKind.None, 
-                    target: ts.ScriptTarget.ESNext 
-                }
-            }).outputText;
-        }
-
-        win.eval(runCode);
+      let runCode = code;
+      if (lang === 'typescript') {
+        runCode = ts.transpileModule(code, {
+          compilerOptions: { module: ts.ModuleKind.None, target: ts.ScriptTarget.ESNext }
+        }).outputText;
+      }
+      win.eval(runCode);
     } catch (e) {
-        hasError = true;
-        out.className = 'has-error';
-        // Improved error reporting
-        out.textContent = `⚠ ${e.name}: ${e.message}`;
-        setOutputStatus('error');
-        setStatusMsg('Error');
+      hasError = true;
+      out.className = 'has-error';
+      out.textContent = `⚠ ${e.name}: ${e.message}`;
+      setOutputStatus('error');
+      setStatusMsg('Error');
     }
 
     if (!hasError) {
-        out.textContent = logs.length ? logs.join('\n') : '(no output)';
-        setOutputStatus('success');
-        setStatusMsg('Done');
+      out.textContent = logs.length ? logs.join('\n') : '(no output)';
+      setOutputStatus('success');
+      setStatusMsg('Done');
     }
 
     document.body.removeChild(scratch);
     stopLoading(); 
     doneRunning(runBtn);
     return;
-}
+  }
+
   // ── Python / Java → Backend ──
   out.textContent = '⏳ Connecting to server...';
   try {
@@ -867,18 +1057,44 @@ if (lang === 'javascript' || lang === 'typescript') {
     setStatusMsg('Done');
   } catch(e) {
     out.className = 'has-error';
-    out.textContent = '⚠ Server Error: Could not connect to backend.\n\nMake sure your Django server is running.';
+    out.textContent = '⚠ Server Error: Could not connect to backend.';
     setOutputStatus('error');
     setStatusMsg('Server error');
   }
-stopLoading(); // STOP HERE
+  stopLoading(); 
   doneRunning(runBtn);
 };
 
+// ── Mobile Tab Switcher ──
+function switchMobileTab(view) {
+  const editorPane = document.getElementById('editor-pane');
+  const outputPane = document.getElementById('output-pane');
+  const codeTab = document.getElementById('m-tab-code');
+  const outTab = document.getElementById('m-tab-output');
+
+  if (view === 'code') {
+    editorPane.classList.add('active-view');
+    outputPane.classList.remove('active-view');
+    codeTab.classList.add('active');
+    outTab.classList.remove('active');
+  } else {
+    outputPane.classList.add('active-view');
+    editorPane.classList.remove('active-view');
+    outTab.classList.add('active');
+    codeTab.classList.remove('active');
+  }
+}
+
+// ── Helpers ──
 function doneRunning(btn) {
   btn.classList.remove('running');
   btn.disabled = false;
-  btn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg> Run`;
+  btn.innerHTML = `<svg viewBox="0 0 16 16" fill="currentColor"><path d="M3 2.5l10 5.5-10 5.5V2.5z"/></svg> <span class="run-text">Run</span>`;
+}
+
+// Initialize for mobile
+if (window.innerWidth <= 768) {
+  switchMobileTab('code');
 }
 
 // ── Toolbar actions ──
@@ -952,8 +1168,82 @@ window.onmessage = function(e) {
     out.textContent += e.data.msg + '\n';
   }
 };
+function handleRun() {
+  // 1. Placeholder for your actual code execution logic
+  console.log("Running code...");
+  
+  // 2. Visual feedback (Optional)
+  const status = document.getElementById('output-status');
+  if (status) status.className = 'output-status running';
 
+  // 3. Automatic Switch to Output Tab on Mobile
+  if (window.innerWidth <= 768) {
+    switchMobileTab('output');
+  }
+}
 
+// Ensure the switchMobileTab function updates the UI correctly
+function switchMobileTab(view) {
+  const editorPane = document.getElementById('editor-pane');
+  const outputPane = document.getElementById('output-pane');
+  const codeTab = document.getElementById('m-tab-code');
+  const outTab = document.getElementById('m-tab-output');
+
+  if (view === 'code') {
+    editorPane.classList.add('active-view');
+    outputPane.classList.remove('active-view');
+    codeTab.classList.add('active');
+    outTab.classList.remove('active');
+    
+    // --- ADD THIS: Tell Monaco to resize itself ---
+    if (editor) {
+      setTimeout(() => {
+        editor.layout();
+      }, 10);
+    }
+  } else {
+    outputPane.classList.add('active-view');
+    editorPane.classList.remove('active-view');
+    outTab.classList.add('active');
+    codeTab.classList.remove('active');
+  }
+}
+// Initialize the view for mobile on load
+if (window.innerWidth <= 768) {
+    switchMobileTab('code');
+}
+const wrapper = document.getElementById('custom-lang-dropdown');
+const trigger = wrapper.querySelector('.select-trigger');
+const options = wrapper.querySelectorAll('.option');
+const nativeSelect = document.getElementById('lang-select');
+const selectedText = document.getElementById('selected-lang-text');
+
+// 1. Toggle dropdown
+trigger.onclick = () => wrapper.classList.toggle('open');
+
+// 2. Handle option selection
+options.forEach(opt => {
+  opt.onclick = function() {
+    const val = this.getAttribute('data-value');
+    
+    // Update Text and Native Select
+    selectedText.innerText = this.innerText;
+    nativeSelect.value = val;
+    
+    // Update active class
+    options.forEach(o => o.classList.remove('selected'));
+    this.classList.add('selected');
+    
+    // Close and trigger change event (important for Monaco)
+    wrapper.classList.remove('open');
+    nativeSelect.dispatchEvent(new Event('change')); 
+  };
+});
+
+// 3. Close when clicking outside
+window.addEventListener('click', (e) => {
+  if (!wrapper.contains(e.target)) wrapper.classList.remove('open');
+});
 </script>
 </body>
 </html>
