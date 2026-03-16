@@ -549,8 +549,17 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     z-index: 1000;
   }
-}
 
+
+
+ #startLoading {
+    /* Adjust top to match your mobile navbar height */
+    top: 42px; 
+    height: 2px; /* Thinner line looks more professional on small screens */
+    /* Ensure it stays on top of all mobile menu elements */
+    z-index: 10001; 
+  }
+}
 /* Desktop Defaults */
 @media (min-width: 769px) {
   .mobile-nav { display: none; }
