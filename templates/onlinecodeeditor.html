@@ -678,17 +678,20 @@ body.light .option:hover {
     </div>
     <div class="select-options">
       <div class="option selected" data-value="python">Python</div>
+       <div class="option" data-value="html">HTML</div>
       <div class="option" data-value="javascript">JavaScript</div>
-      <div class="option" data-value="java">Java</div>
-      <div class="option" data-value="html">HTML</div>
+       <div class="option" data-value="typescript">TypeScript</div>
+     
+        
     </div>
   </div>
 
   <select id="lang-select" style="display: none;">
     <option value="python">Python</option>
-    <option value="javascript">JavaScript</option>
-    <option value="java">Java</option>
     <option value="html">HTML</option>
+    <option value="javascript">JavaScript</option>
+    <option value="typescript">TypeScript</option>
+   
   </select>
 </div>
 
@@ -720,25 +723,18 @@ body.light .option:hover {
   <!-- SIDEBAR -->
   <div class="sidebar">
     <button class="sidebar-btn active" title="Python" onclick="setLang('python')">
-      <span class="lang-badge" style="color:#3572A5">PY</span>
+      <span class="lang-badge" style="color:white">PY</span>
+    </button>
+     <button class="sidebar-btn" title="HTML" onclick="setLang('html')">
+      <span class="lang-badge" style="color:white">HT</span>
     </button>
     <button class="sidebar-btn" title="JavaScript" onclick="setLang('javascript')">
-      <span class="lang-badge" style="color:#f1e05a">JS</span>
+      <span class="lang-badge" style="color:white">JS</span>
     </button>
     <button class="sidebar-btn" title="TypeScript" onclick="setLang('typescript')">
-      <span class="lang-badge" style="color:#2b7489">TS</span>
+      <span class="lang-badge" style="color:white">TS</span>
     </button>
-    <button class="sidebar-btn" title="Java" onclick="setLang('java')">
-      <span class="lang-badge" style="color:#b07219">JV</span>
-    </button>
-    <button class="sidebar-btn" title="HTML" onclick="setLang('html')">
-      <span class="lang-badge" style="color:#e34c26">HT</span>
-    </button>
-    <div style="flex:1"></div>
-    <!-- Settings icon -->
-    <button class="sidebar-btn" title="Settings">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 10.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM8 0l.5 2.5c.4.1.8.3 1.1.5l2.3-1 1.6 1.6-1 2.3c.2.3.4.7.5 1.1L15.5 7.5v2.3l-2.5.5c-.1.4-.3.8-.5 1.1l1 2.3-1.6 1.6-2.3-1c-.3.2-.7.4-1.1.5L8 17H6l-.5-2.5c-.4-.1-.8-.3-1.1-.5l-2.3 1-1.6-1.6 1-2.3c-.2-.3-.4-.7-.5-1.1L.5 9.8V7.5l2.5-.5c.1-.4.3-.8.5-1.1l-1-2.3L4.1 2l2.3 1c.3-.2.7-.4 1.1-.5L8 0z"/></svg>
-    </button>
+  
   </div>
 
   <!-- EDITOR PANE -->
@@ -793,9 +789,10 @@ body.light .option:hover {
     <svg viewBox="0 0 16 16" fill="currentColor"><circle cx="8" cy="8" r="7.5" fill="none" stroke="currentColor"/><path d="M5.5 5.5L8 8l-2.5 2.5M9 10.5h2"/></svg>
     Python
   </div>
+
   <div class="statusbar-right">
     <div class="status-item" id="status-msg">Ready</div>
-    <div class="status-item">UTF-8</div>
+    <div class="status-item">UTF-8</div>   
   </div>
 </div>
 
